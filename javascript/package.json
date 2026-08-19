@@ -10,7 +10,7 @@
   "scripts": { "example": "node example.mjs" },
   "keywords": ["gpr", "ground-penetrating-radar", "georadar", "dzt", "gssi", "open-data", "ndt"],
   "homepage": "https://www.gprbase.com",
-  "repository": { "type": "git", "url": "git+https://github.com/MDS-GPRbase/gprbase-api-client.git" },
+  "repository": { "type": "git", "url": "git+https://github.com/MDSLab-Aix-en-Provence/gprbase-api-client.git" },
   "author": "MDS - Le Matériel de Sondage",
   "license": "MIT"
 }
