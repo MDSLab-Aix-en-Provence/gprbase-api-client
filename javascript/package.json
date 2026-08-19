@@ -1,0 +1,16 @@
+{
+  "name": "gprbase-api-client",
+  "version": "1.0.0",
+  "description": "Client for the GPRbase API — free real-world Ground Penetrating Radar datasets",
+  "type": "module",
+  "main": "gprbase.js",
+  "exports": "./gprbase.js",
+  "files": ["gprbase.js", "README.md"],
+  "engines": { "node": ">=18" },
+  "scripts": { "example": "node example.mjs" },
+  "keywords": ["gpr", "ground-penetrating-radar", "georadar", "dzt", "gssi", "open-data", "ndt"],
+  "homepage": "https://www.gprbase.com",
+  "repository": { "type": "git", "url": "git+https://github.com/MDS-GPRbase/gprbase-api-client.git" },
+  "author": "MDS - Le Matériel de Sondage",
+  "license": "MIT"
+}

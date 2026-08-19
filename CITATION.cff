@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this client, please cite it as below."
+type: software
+title: "GPRbase API client"
+abstract: "Python and JavaScript clients for the GPRbase public API, giving programmatic access to a free catalogue of real-world Ground Penetrating Radar datasets."
+authors:
+  - name: "MDS - Le Matériel de Sondage - GPRbase"
+    email: info@gprbase.com
+    website: "https://www.gprbase.com"
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/MDS-GPRbase/gprbase-api-client"
+url: "https://www.gprbase.com"
+keywords:
+  - "ground penetrating radar"
+  - GPR
+  - georadar
+  - DZT
+  - GSSI
+  - "open data"
+  - "API client"
+  - "non-destructive testing"
+references:
+  - type: report
+    title: "GPRBase: A Free Library of Real-World Ground Penetrating Radar Datasets for Education, Training and Research"
+    authors:
+      - family-names: Xavier
+        given-names: Jérôme
+    year: 2026
+    doi: 10.5281/zenodo.21894933
