@@ -29,10 +29,10 @@ Nothing to install. Copy the single file you need.
 
 ```bash
 # Python — standard library only
-curl -O https://raw.githubusercontent.com/MDS-GPRbase/gprbase-api-client/main/python/gprbase.py
+curl -O https://raw.githubusercontent.com/MDSLab-Aix-en-Provence/gprbase-api-client/main/python/gprbase.py
 
 # JavaScript — Node 18+ or any modern browser
-curl -O https://raw.githubusercontent.com/MDS-GPRbase/gprbase-api-client/main/javascript/gprbase.js
+curl -O https://raw.githubusercontent.com/MDSLab-Aix-en-Provence/gprbase-api-client/main/javascript/gprbase.js
 ```
 
 ## Python
