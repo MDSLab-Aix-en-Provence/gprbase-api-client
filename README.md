@@ -188,8 +188,8 @@ métadonnées, produire des citations, exporter en CSV.
 Rien à installer. Copiez le fichier dont vous avez besoin.
 
 ```bash
-curl -O https://raw.githubusercontent.com/MDS-GPRbase/gprbase-api-client/main/python/gprbase.py
-curl -O https://raw.githubusercontent.com/MDS-GPRbase/gprbase-api-client/main/javascript/gprbase.js
+curl -O https://raw.githubusercontent.com/MDSLab-Aix-en-Provence/gprbase-api-client/main/python/gprbase.py
+curl -O https://raw.githubusercontent.com/MDSLab-Aix-en-Provence/gprbase-api-client/main/javascript/gprbase.js
 ```
 
 ## Exemple
