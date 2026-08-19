@@ -9,7 +9,7 @@ authors:
     website: "https://www.gprbase.com"
 version: 1.0.0
 license: MIT
-repository-code: "https://github.com/MDS-GPRbase/gprbase-api-client"
+repository-code: "https://github.com/MDSLab-Aix-en-Provence/gprbase-api-client"
 url: "https://www.gprbase.com"
 keywords:
   - "ground penetrating radar"
