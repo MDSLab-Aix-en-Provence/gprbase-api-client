@@ -39,7 +39,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Iterator, Sequence
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __all__ = ["GPRbase", "Dataset", "GPRbaseError", "APPLICATIONS"]
 
 DEFAULT_BASE_URL = "https://www.gprbase.com"
@@ -96,6 +96,10 @@ class Dataset:
     date_published: str | None = None
     license: str = ""
     status: str = "public"
+    channels: int | None = None
+    gps_available: bool | None = None
+    ground_truth: str = "none"
+    ground_truth_method: str | None = None
     is_accessible_for_free: bool = True
     is_accessible_for_pro: bool = False
     url: str | None = None
@@ -124,6 +128,10 @@ class Dataset:
             date_published=payload.get("datePublished"),
             license=payload.get("license") or "",
             status=payload.get("status") or "public",
+            channels=payload.get("channels"),
+            gps_available=payload.get("gpsAvailable"),
+            ground_truth=payload.get("groundTruth") or "none",
+            ground_truth_method=payload.get("groundTruthMethod"),
             is_accessible_for_free=bool(payload.get("isAccessibleForFree", True)),
             is_accessible_for_pro=bool(payload.get("isAccessibleForPro", False)),
             url=payload.get("url"),
@@ -151,6 +159,16 @@ class Dataset:
     @property
     def year(self) -> str | None:
         return self.date_published[:4] if self.date_published else None
+
+    @property
+    def is_verified(self) -> bool:
+        """La cible a-t-elle été confirmée par un moyen indépendant du radar ?"""
+        return self.ground_truth == "verified"
+
+    @property
+    def is_georeferenced(self) -> bool:
+        """Les fichiers .DZG sont-ils inclus ? False si inconnu."""
+        return self.gps_available is True
 
     def has_application(self, application: str) -> bool:
         """Tolerant to case, accents and the French/English label."""
@@ -277,6 +295,9 @@ class GPRbase:
         frequency: str | None = None,
         contributor: str | None = None,
         search: str | None = None,
+        ground_truth: str | None = None,
+        gps: bool | None = None,
+        min_channels: int | None = None,
         free_only: bool = True,
     ) -> list[Dataset]:
         """Datasets matching every filter given. Filters left to ``None`` are ignored.
@@ -299,6 +320,15 @@ class GPRbase:
         if contributor:
             needle = _norm(contributor)
             items = [d for d in items if needle in _norm(d.contributor)]
+        if ground_truth:
+            wanted = _norm(ground_truth)
+            aliases = {"yes": "verified", "confirmed": "verified", "true": "verified"}
+            wanted = aliases.get(wanted, wanted)
+            items = [d for d in items if _norm(d.ground_truth) == wanted]
+        if gps is not None:
+            items = [d for d in items if d.gps_available is gps]
+        if min_channels:
+            items = [d for d in items if (d.channels or 0) >= min_channels]
         if search:
             needle = _norm(search)
             items = [
@@ -337,6 +367,13 @@ class GPRbase:
                 counts[antenna] = counts.get(antenna, 0) + 1
         return dict(sorted(counts.items(), key=lambda kv: -kv[1]))
 
+    def ground_truth_summary(self) -> dict[str, int]:
+        """Combien de datasets par niveau de vérité terrain."""
+        counts = {"verified": 0, "partial": 0, "none": 0}
+        for d in self.datasets():
+            counts[d.ground_truth] = counts.get(d.ground_truth, 0) + 1
+        return counts
+
     # ---------------------------------------------------------------- export
     def to_csv(self, stream, datasets: Sequence[Dataset] | None = None) -> None:
         """Write a flat CSV, one row per dataset."""
@@ -344,12 +381,17 @@ class GPRbase:
         writer = csv.writer(stream)
         writer.writerow([
             "id", "title", "title_fr", "applications", "antenna",
-            "frequency_mhz", "format", "contributor", "date_published", "url",
+            "frequency_mhz", "format", "file_count", "channels", "gps_available",
+            "ground_truth", "contributor", "date_published", "url",
         ])
         for d in rows:
             writer.writerow([
                 d.id, d.title, d.title_fr, ";".join(d.applications), d.antenna,
-                d.frequency_mhz, d.format, d.contributor, d.date_published or "",
+                d.frequency_mhz, d.format,
+                d.file_count if d.file_count is not None else "",
+                d.channels if d.channels is not None else "",
+                "" if d.gps_available is None else ("yes" if d.gps_available else "no"),
+                d.ground_truth, d.contributor, d.date_published or "",
                 d.url or "",
             ])
 
@@ -376,6 +418,10 @@ def _cli(argv: Sequence[str] | None = None) -> int:
     p_list.add_argument("--frequency")
     p_list.add_argument("--contributor")
     p_list.add_argument("--search")
+    p_list.add_argument("--ground-truth", choices=["verified", "partial", "none"],
+                        help="keep only datasets at this ground truth level")
+    p_list.add_argument("--gps", action="store_true", help="only datasets with .DZG files")
+    p_list.add_argument("--min-channels", type=int, help="minimum number of channels")
     p_list.add_argument("--lang", choices=["en", "fr"], default="en")
 
     p_show = sub.add_parser("show", help="show one dataset")
@@ -399,11 +445,25 @@ def _cli(argv: Sequence[str] | None = None) -> int:
                 frequency=args.frequency,
                 contributor=args.contributor,
                 search=args.search,
+                ground_truth=args.ground_truth,
+                gps=True if args.gps else None,
+                min_channels=args.min_channels,
             )
             for d in found:
                 freq = f"{d.frequency_mhz} MHz" if d.frequency_mhz else ""
+                marks = []
+                if d.is_verified:
+                    marks.append("ground truth verified")
+                elif d.ground_truth == "partial":
+                    marks.append("ground truth partial")
+                if d.is_georeferenced:
+                    marks.append("GPS")
+                if d.file_count:
+                    marks.append(f"{d.file_count} files")
                 print(f"{d.id}  {d.title_in(args.lang)}")
                 print(f"        {d.antenna} {freq} · {', '.join(d.applications)}")
+                if marks:
+                    print(f"        {' · '.join(marks)}")
             print(f"\n{len(found)} dataset(s)")
 
         elif args.command == "show":
@@ -415,6 +475,14 @@ def _cli(argv: Sequence[str] | None = None) -> int:
             print(f"Antenna      {d.antenna}")
             print(f"Frequency    {d.frequency_mhz} MHz")
             print(f"Applications {', '.join(d.applications)}")
+            print(f"Files        {d.file_count if d.file_count is not None else '-'}")
+            print(f"Channels     {d.channels if d.channels is not None else '-'}")
+            gps = '-' if d.gps_available is None else ('yes (.DZG)' if d.gps_available else 'no')
+            print(f"GPS files    {gps}")
+            gt = d.ground_truth
+            if d.ground_truth_method:
+                gt += f" ({d.ground_truth_method})"
+            print(f"Ground truth {gt}")
             print(f"Contributor  {d.contributor}")
             print(f"Licence      {d.license}")
             print(f"URL          {d.url_in(args.lang) or '-'}\n")
@@ -426,6 +494,9 @@ def _cli(argv: Sequence[str] | None = None) -> int:
                 print(f"  {n:3d}  {key:<14} {APPLICATIONS.get(key, '')}")
             print("\nDatasets per antenna")
             for key, n in client.antennas().items():
+                print(f"  {n:3d}  {key}")
+            print("\nGround truth")
+            for key, n in client.ground_truth_summary().items():
                 print(f"  {n:3d}  {key}")
 
         elif args.command == "csv":

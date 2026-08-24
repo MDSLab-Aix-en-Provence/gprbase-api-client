@@ -11,12 +11,13 @@
  *
  *   const gpr = new GPRbase();
  *   const concrete = await gpr.datasets({ application: 'beton' });
+ *   const validated = await gpr.datasets({ groundTruth: 'verified' });
  *   concrete.forEach(d => console.log(d.id, d.title));
  *
  * Licence: MIT. The client is MIT; the datasets are CC BY-NC-SA 4.0.
  */
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 const DEFAULT_BASE_URL = 'https://www.gprbase.com';
 
 /** Canonical application keys used by the catalogue. */
@@ -75,6 +76,10 @@ export class Dataset {
     this.datePublished = payload.datePublished ?? null;
     this.license = payload.license ?? '';
     this.status = payload.status ?? 'public';
+    this.channels = payload.channels ?? null;
+    this.gpsAvailable = payload.gpsAvailable ?? null;
+    this.groundTruth = payload.groundTruth ?? 'none';
+    this.groundTruthMethod = payload.groundTruthMethod ?? null;
     this.isAccessibleForFree = payload.isAccessibleForFree !== false;
     this.isAccessibleForPro = payload.isAccessibleForPro === true;
     this.url = payload.url ?? null;
@@ -91,6 +96,16 @@ export class Dataset {
   /** Antennas as an array — a dataset may combine several. */
   get antennas() {
     return this.antenna.split(';').map(s => s.trim()).filter(Boolean);
+  }
+
+  /** La cible a-t-elle ete confirmee par un moyen independant du radar ? */
+  get isVerified() {
+    return this.groundTruth === 'verified';
+  }
+
+  /** Les fichiers .DZG sont-ils inclus ? false si inconnu. */
+  get isGeoreferenced() {
+    return this.gpsAvailable === true;
   }
 
   get year() {
@@ -215,7 +230,8 @@ export class GPRbase {
    * @returns {Promise<Dataset[]>}
    */
   async datasets({
-    application, antenna, frequency, contributor, search, freeOnly = true,
+    application, antenna, frequency, contributor, search,
+    groundTruth, gps, minChannels, freeOnly = true,
   } = {}) {
     const catalog = await this.catalog();
     let items = (catalog.datasets ?? []).map(d => new Dataset(d));
@@ -233,6 +249,17 @@ export class GPRbase {
     if (contributor) {
       const needle = norm(contributor);
       items = items.filter(d => norm(d.contributor).includes(needle));
+    }
+    if (groundTruth) {
+      let wanted = norm(groundTruth);
+      wanted = ({ yes: 'verified', confirmed: 'verified', true: 'verified' })[wanted] ?? wanted;
+      items = items.filter(d => norm(d.groundTruth) === wanted);
+    }
+    if (gps !== undefined && gps !== null) {
+      items = items.filter(d => d.gpsAvailable === gps);
+    }
+    if (minChannels) {
+      items = items.filter(d => (d.channels ?? 0) >= minChannels);
     }
     if (search) {
       const needle = norm(search);
@@ -261,6 +288,15 @@ export class GPRbase {
       for (const app of d.applications) counts[app] = (counts[app] ?? 0) + 1;
     }
     return Object.fromEntries(Object.entries(counts).sort((a, b) => b[1] - a[1]));
+  }
+
+  /** How many datasets per ground truth level. */
+  async groundTruthSummary() {
+    const counts = { verified: 0, partial: 0, none: 0 };
+    for (const d of await this.datasets()) {
+      counts[d.groundTruth] = (counts[d.groundTruth] ?? 0) + 1;
+    }
+    return counts;
   }
 
   /** How many datasets per antenna. */

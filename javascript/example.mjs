@@ -26,12 +26,20 @@ for (const d of await gpr.datasets({ search: 'voute' })) {
   console.log(`  ${d.id}  ${d.title}`);
 }
 
-// 5. One dataset, with its citation
+// 5. Datasets whose targets were confirmed independently of the radar
+console.log('\nGround truth verified:');
+for (const d of await gpr.datasets({ groundTruth: 'verified' })) {
+  console.log(`  ${d.id}  ${d.title}`);
+  console.log(`        method: ${d.groundTruthMethod ?? 'not stated'}`);
+}
+console.log('\nGround truth across the catalogue:', await gpr.groundTruthSummary());
+
+// 6. One dataset, with its citation
 const ds = await gpr.dataset('ds016');
 console.log(`\n${ds.title}\n`);
 console.log(ds.citationApa());
 
-// 6. Catalogue overview
+// 7. Catalogue overview
 console.log('\nDatasets per application:');
 for (const [key, n] of Object.entries(await gpr.applications())) {
   console.log(`  ${String(n).padStart(3)}  ${APPLICATIONS[key] ?? key}`);

@@ -23,17 +23,27 @@ print("\nSearch 'voute':")
 for d in gpr.datasets(search="voute"):
     print(f"  {d.id}  {d.title}")
 
-# 5. One dataset, with its citation
+# 5. Datasets whose targets were confirmed independently of the radar
+print("\nGround truth verified:")
+for d in gpr.datasets(ground_truth="verified"):
+    print(f"  {d.id}  {d.title}")
+    print(f"        method: {d.ground_truth_method or 'not stated'}")
+
+print("\nGround truth across the catalogue:")
+for level, n in gpr.ground_truth_summary().items():
+    print(f"  {n:3d}  {level}")
+
+# 6. One dataset, with its citation
 ds = gpr.dataset("ds016")
 print(f"\n{ds.title}\n")
 print(ds.citation_apa())
 
-# 6. Catalogue overview
+# 7. Catalogue overview
 print("\nDatasets per application:")
 for key, n in gpr.applications().items():
     print(f"  {n:3d}  {APPLICATIONS.get(key, key)}")
 
-# 7. Export
+# 8. Export
 with open("gprbase-datasets.csv", "w", newline="", encoding="utf-8") as handle:
     gpr.to_csv(handle)
 print("\nWritten: gprbase-datasets.csv")

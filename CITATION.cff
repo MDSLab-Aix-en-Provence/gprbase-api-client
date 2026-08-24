@@ -5,11 +5,12 @@ title: "GPRbase API client"
 abstract: "Python and JavaScript clients for the GPRbase public API, giving programmatic access to a free catalogue of real-world Ground Penetrating Radar datasets."
 authors:
   - name: "MDS - Le Matériel de Sondage - GPRbase"
+    orcid: "https://orcid.org/0009-0002-0616-253X"
     email: info@gprbase.com
     website: "https://www.gprbase.com"
-version: 1.0.0
+version: 1.1.0
 license: MIT
-repository-code: "https://github.com/MDSLab-Aix-en-Provence/gprbase-api-client"
+repository-code: "https://github.com/MDS-GPRbase/gprbase-api-client"
 url: "https://www.gprbase.com"
 keywords:
   - "ground penetrating radar"

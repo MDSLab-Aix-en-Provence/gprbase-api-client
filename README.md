@@ -29,10 +29,10 @@ Nothing to install. Copy the single file you need.
 
 ```bash
 # Python — standard library only
-curl -O https://raw.githubusercontent.com/MDSLab-Aix-en-Provence/gprbase-api-client/main/python/gprbase.py
+curl -O https://raw.githubusercontent.com/MDS-GPRbase/gprbase-api-client/main/python/gprbase.py
 
 # JavaScript — Node 18+ or any modern browser
-curl -O https://raw.githubusercontent.com/MDSLab-Aix-en-Provence/gprbase-api-client/main/javascript/gprbase.js
+curl -O https://raw.githubusercontent.com/MDS-GPRbase/gprbase-api-client/main/javascript/gprbase.js
 ```
 
 ## Python
@@ -53,6 +53,13 @@ for d in gpr.datasets(frequency="300"):
 # Full-text search, accent-insensitive
 gpr.datasets(search="voute")     # finds "Voûtes en maçonnerie"
 
+# Only datasets whose targets were confirmed independently of the radar
+for d in gpr.datasets(ground_truth="verified"):
+    print(d.id, d.ground_truth_method)
+
+# Only datasets shipping .DZG positioning files
+gpr.datasets(gps=True)
+
 # One dataset, with a ready-made citation
 ds = gpr.dataset("ds016")
 print(ds.citation_apa())
@@ -69,6 +76,8 @@ gpr.antennas()       # {'UtilityScan DF': 9, 'FLEX NX': 5, ...}
 python gprbase.py list
 python gprbase.py list --application reseaux --antenna "UtilityScan DF"
 python gprbase.py list --search karst --lang fr
+python gprbase.py list --ground-truth verified
+python gprbase.py list --gps --min-channels 2
 python gprbase.py show ds016 --bibtex
 python gprbase.py stats
 python gprbase.py csv > datasets.csv
@@ -110,6 +119,9 @@ Runs unchanged in the browser:
 | `frequency` | Exact match against split values: `300` matches `300/800` |
 | `contributor` | Partial match |
 | `search` | Full text over titles, descriptions, antenna, targets — accent-insensitive |
+| `ground_truth` / `groundTruth` | `verified`, `partial` or `none`. `yes` and `confirmed` are accepted for `verified` |
+| `gps` | `True` keeps only datasets shipping `.DZG` positioning files |
+| `min_channels` / `minChannels` | Minimum number of simultaneously recorded channels |
 | `free_only` / `freeOnly` | `true` by default |
 
 Multi-value fields are split for you: an antenna field of `FLEX NX;NX25;NX15`
@@ -126,8 +138,30 @@ GET https://www.gprbase.com/api/datasets/{id}.json   one dataset + citations
 ```
 
 Each dataset carries: identifiers, bilingual title and description,
-applications, antenna, frequency, format, contributor, licence, publication
-date, and canonical URLs in both languages.
+applications, antenna, frequency, format, file count, channels, GPS
+availability, ground truth level, contributor, licence, publication date, and
+canonical URLs in both languages.
+
+### Ground truth
+
+Most freely available GPR datasets say nothing about their validation. GPRbase
+states it explicitly:
+
+| Value | Meaning |
+|---|---|
+| `verified` | The target was confirmed by a means independent of the radar |
+| `partial` | Some targets confirmed, or context documented without direct verification |
+| `none` | No documented validation — most of the catalogue |
+
+`ground_truth_method` gives the means when known: coring, trial trench,
+bibliography, direct observation.
+
+These datasets are **not** evaluation benchmarks: they carry no annotations,
+masks or bounding boxes. Check this field before using one for validation or
+comparison.
+
+**[Full API reference →](API.md)** — endpoints, every field, error codes and
+usage notes.
 
 ## Licensing
 
@@ -188,8 +222,8 @@ métadonnées, produire des citations, exporter en CSV.
 Rien à installer. Copiez le fichier dont vous avez besoin.
 
 ```bash
-curl -O https://raw.githubusercontent.com/MDSLab-Aix-en-Provence/gprbase-api-client/main/python/gprbase.py
-curl -O https://raw.githubusercontent.com/MDSLab-Aix-en-Provence/gprbase-api-client/main/javascript/gprbase.js
+curl -O https://raw.githubusercontent.com/MDS-GPRbase/gprbase-api-client/main/python/gprbase.py
+curl -O https://raw.githubusercontent.com/MDS-GPRbase/gprbase-api-client/main/javascript/gprbase.js
 ```
 
 ## Exemple
